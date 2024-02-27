@@ -1,10 +1,5 @@
 package location
 
-type Location struct {
-	City   string
-	Region string
-}
-
 var (
 	Regions = map[string]string{
 		"AC": "Acre",
@@ -36,3 +31,12 @@ var (
 		"DF": "Distrito Federal",
 	}
 )
+
+type Location struct {
+	City   string
+	Region string
+}
+
+func (l *Location) Equals(other *Location) bool {
+	return l.Region == other.Region && l.City == other.City
+}

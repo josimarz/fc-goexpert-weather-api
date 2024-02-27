@@ -9,6 +9,10 @@ import (
 	"github.com/josimarz/fc-goexpert-weather-api/internal/temp"
 )
 
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type ErrorResponse struct {
 	Error struct {
 		Code    int    `json:"code"`
@@ -24,11 +28,15 @@ type Response struct {
 }
 
 type WeatherApi struct {
-	key string
+	key    string
+	client HTTPClient
 }
 
 func NewWeatherApi(key string) *WeatherApi {
-	return &WeatherApi{key}
+	return &WeatherApi{
+		key:    key,
+		client: &http.Client{},
+	}
 }
 
 func (a *WeatherApi) Search(location string) (*temp.Temp, error) {
@@ -41,7 +49,7 @@ func (a *WeatherApi) Search(location string) (*temp.Temp, error) {
 	q.Add("q", location)
 	q.Add("aqi", "no")
 	req.URL.RawQuery = q.Encode()
-	res, err := http.DefaultClient.Do(req)
+	res, err := a.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

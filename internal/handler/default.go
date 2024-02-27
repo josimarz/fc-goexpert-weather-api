@@ -32,12 +32,14 @@ func (h *DefaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !match {
-		http.Error(w, "invalid zipcode", http.StatusUnprocessableEntity)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write([]byte("invalid zipcode"))
 		return
 	}
 	loc, err := h.cepApi.Search(cep)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	search := fmt.Sprintf("%s, %s", loc.City, loc.Region)
@@ -51,8 +53,11 @@ func (h *DefaultHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		F: temp.F,
 		K: temp.K,
 	}
-	w.Header().Add("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(res); err != nil {
+	body, err := json.Marshal(res)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body)
 }
